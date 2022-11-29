@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const Goal = require("../models/goalModal");
+const auth = require("../Auth/authMiddleware");
 
 //create goals
-router.post("/goal", async (req, res) => {
-  const goal = new Goal(req.body);
+router.post("/goals ", auth, async (req, res) => {
+  const goal = await Goal.create({
+    text: req.body.text,
+  });
   try {
     await goal.save();
     res.status(201).send(goal);
@@ -14,10 +17,10 @@ router.post("/goal", async (req, res) => {
 });
 
 //read all
-router.get("/goals", async (req, res) => {
+router.get("/goals", auth, async (req, res) => {
   try {
-    const goal = await Goal.find({});
-    res.send(goal);
+    const goals = await Goal.find({ user: req.user.id });
+    res.status(200).json(goals);
   } catch (e) {
     res.status(500).send(e);
   }
@@ -38,9 +41,7 @@ router.get("/goal/:id", async (req, res) => {
 });
 
 //Update goal
-router.put("/goal/:id", async (req, res) => {
-  const id = req.params.id;
-  const body = req.params.body;
+router.put("/goal/:id", auth, async (req, res) => {
   try {
     const goal = await Goal.findByIdAndUpdate(req.params.id, req.body);
     if (!goal) {
@@ -53,7 +54,7 @@ router.put("/goal/:id", async (req, res) => {
 });
 
 //delete goal
-router.delete("/goal/:id", async (req, res) => {
+router.delete("/goal/:id", auth, async (req, res) => {
   try {
     const goal = await Goal.findByIdAndDelete(req.params.id);
     if (!goal) {

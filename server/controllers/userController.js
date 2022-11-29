@@ -1,23 +1,23 @@
-const express = require("express");
-const route = express.Router();
-const User = require("../models/userModal");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const auth = require("../Auth/authMiddleware");
-//register user
-route.post("/user", async (req, res) => {
+const asyncHandler = require("express-async-handler");
+const User = require("../models/userModel");
+
+// @desc    Register new user
+// @route   POST /api/users
+// @access  Public
+const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
-    res.status(400);
-    res.send("Please add all fields");
+    res.status(400).send("Please add all fields");
   }
 
   // Check if user exists
   const userExists = await User.findOne({ email });
 
   if (userExists) {
-    return res.status(404).send("user already exist");
+    res.status(400).send("User already exists");
   }
 
   // Hash password
@@ -39,15 +39,19 @@ route.post("/user", async (req, res) => {
       token: generateToken(user._id),
     });
   } else {
-    return res.status(400).send("Invalid user data");
+    res.status(400).send("Invalid user data");
   }
 });
 
-//Login user
-route.post("/login", async (req, res) => {
+// @desc    Authenticate a user
+// @route   POST /api/users/login
+// @access  Public
+const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  //check for user email
+
+  // Check for user email
   const user = await User.findOne({ email });
+
   if (user && (await bcrypt.compare(password, user.password))) {
     res.json({
       _id: user.id,
@@ -56,18 +60,26 @@ route.post("/login", async (req, res) => {
       token: generateToken(user._id),
     });
   } else {
-    return res.status(400).send("invalid credentails");
+    res.status(400).send("Invalid credentials");
   }
 });
 
-//display user data
-route.get("/me", auth, async (req, res) => {
-  const { _id, email, name } = await User.findById(req.user.id);
-  res.status(200).json({ id: _id, email, name });
+// @desc    Get user data
+// @route   GET /api/users/me
+// @access  Private
+const getMe = asyncHandler(async (req, res) => {
+  res.status(200).json(req.user);
 });
 
-//generate JWT
+// Generate JWT
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_Secret, { expiresIn: "30d" });
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
 };
-module.exports = route;
+
+module.exports = {
+  registerUser,
+  loginUser,
+  getMe,
+};
