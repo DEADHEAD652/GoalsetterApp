@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server/server.js",
     "server": "nodemon server/server.js",
-    "client": "npm run start --prefix client"
+    "client": "npm run start --prefix client",  
+      "dev" : "concurrently \"npm run server \" \"npm run client \""
+
   },
   "author": "",
   "license": "ISC",
@@ -21,6 +23,7 @@
     "mongoose": "^6.7.3"
   },
   "devDependencies": {
+    "concurrently": "^7.6.0",
     "nodemon": "^2.0.20"
   }
 }
