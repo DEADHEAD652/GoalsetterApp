@@ -29,9 +29,9 @@ function Dashboard() {
 
     dispatch(getGoals());
 
-    return () => {
+    if (!isError) {
       dispatch(reset());
-    };
+    }
   }, [user, navigate, isError, message, dispatch]);
 
   if (isLoading) {
